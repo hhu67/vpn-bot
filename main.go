@@ -48,6 +48,14 @@ func main() {
 	psql := os.Getenv("DB_LINK")
 	adminID := os.Getenv("ADMIN_ID")
 	int_adminID, err := strconv.ParseInt(adminID, 10, 64)
+	if err != nil {
+		log.Fatal(err)
+	}
+	adminID2 := os.Getenv("ADMIN_ID2")
+	int_adminID2, err := strconv.ParseInt(adminID2, 10, 64)
+	if err != nil {
+		log.Fatal(err)
+	}
 	tgToken := os.Getenv("TOKEN")
 
 	db, err = sql.Open("pgx", psql)
@@ -84,7 +92,10 @@ func main() {
 		default:
 			msg_text = "ТАК НЕЛЬЗЯ"
 		}
-		msg := tgbotapi.NewMessage(int_adminID, msg_text)
+		if update.Message.Chat.ID != int_adminID2 || update.Message.Chat.ID != int_adminID {
+			return
+		}
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, msg_text)
 		_, err = tg.Send(msg)
 		if err != nil {
 			log.Println(err)
