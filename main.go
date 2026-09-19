@@ -36,7 +36,7 @@ func buildAnswer(limit int) (string, error) {
 		line := fmt.Sprintf("%s | %s | %s", userAgent, hwid, model)
 		lines = append(lines, line)
 	}
-	return strings.Join(lines, "\n"), nil
+	return strings.Join(lines, "\n\n\n"), nil
 }
 
 func main() {
