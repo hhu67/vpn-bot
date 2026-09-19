@@ -92,8 +92,8 @@ func main() {
 		default:
 			msg_text = "ТАК НЕЛЬЗЯ"
 		}
-		if update.Message.Chat.ID != int_adminID2 || update.Message.Chat.ID != int_adminID {
-			return
+		if update.Message.Chat.ID != int_adminID2 && update.Message.Chat.ID != int_adminID {
+			continue
 		}
 		msg := tgbotapi.NewMessage(update.Message.Chat.ID, msg_text)
 		_, err = tg.Send(msg)
