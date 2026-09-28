@@ -17,7 +17,7 @@ var tg *tgbotapi.BotAPI
 var db *sql.DB
 
 func buildAnswer(limit int) (string, error) {
-	row, err := db.Query("SELECT user_agent, hwid, device_model FROM shadow_user LIMIT $1", limit)
+	row, err := db.Query("SELECT user_agent, hwid, device_model, block FROM shadow_user LIMIT $1", limit)
 	if err != nil {
 		return "", err
 	}
@@ -29,11 +29,12 @@ func buildAnswer(limit int) (string, error) {
 		var userAgent string
 		var hwid string
 		var model string
+		var block bool
 
-		if err = row.Scan(&userAgent, &hwid, &model); err != nil {
+		if err = row.Scan(&userAgent, &hwid, &model, &block); err != nil {
 			return "", err
 		}
-		line := fmt.Sprintf("%s | %s | %s", userAgent, hwid, model)
+		line := fmt.Sprintf("%s | %s | %s | Статус блокировки %v", userAgent, hwid, model, block)
 		lines = append(lines, line)
 	}
 
