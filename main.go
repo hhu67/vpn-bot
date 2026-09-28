@@ -25,6 +25,7 @@ type User struct {
 	UserAgent   string
 	HWID        string
 	DeviceModel string
+	RealName    string
 	Block       bool
 }
 
@@ -37,7 +38,7 @@ func getUsersCount() (int, error) {
 
 // getUsers получает список пользователей с пагинацией
 func getUsers(offset, limit int) ([]User, error) {
-	rows, err := db.Query("SELECT user_agent, hwid, device_model, block FROM shadow_user ORDER BY hwid LIMIT $1 OFFSET $2", limit, offset)
+	rows, err := db.Query("SELECT user_agent, hwid, device_model, real_name, block FROM shadow_user ORDER BY hwid LIMIT $1 OFFSET $2", limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +47,7 @@ func getUsers(offset, limit int) ([]User, error) {
 	var users []User
 	for rows.Next() {
 		var user User
-		if err = rows.Scan(&user.UserAgent, &user.HWID, &user.DeviceModel, &user.Block); err != nil {
+		if err = rows.Scan(&user.UserAgent, &user.HWID, &user.DeviceModel, &user.RealName, &user.Block); err != nil {
 			return nil, err
 		}
 		users = append(users, user)
@@ -62,8 +63,8 @@ func getUsers(offset, limit int) ([]User, error) {
 // getUserByHWID получает информацию о пользователе по HWID
 func getUserByHWID(hwid string) (*User, error) {
 	var user User
-	err := db.QueryRow("SELECT user_agent, hwid, device_model, block FROM shadow_user WHERE hwid=$1", hwid).
-		Scan(&user.UserAgent, &user.HWID, &user.DeviceModel, &user.Block)
+	err := db.QueryRow("SELECT user_agent, hwid, device_model, real_name, block FROM shadow_user WHERE hwid=$1", hwid).
+		Scan(&user.UserAgent, &user.HWID, &user.DeviceModel, &user.RealName, &user.Block)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +135,12 @@ func createUsersListMenu(page int) (string, tgbotapi.InlineKeyboardMarkup, error
 	var rows [][]tgbotapi.InlineKeyboardButton
 	for i, user := range users {
 		num := offset + i + 1
-		buttonText := fmt.Sprintf("%d. %s", num, user.DeviceModel)
+		// Показываем real_name в списке
+		displayName := user.RealName
+		if displayName == "" {
+			displayName = "Без имени"
+		}
+		buttonText := fmt.Sprintf("%d. %s", num, displayName)
 		if user.Block {
 			buttonText += " 🔒"
 		}
@@ -177,13 +183,20 @@ func createUserDetailMenu(hwid string) (string, tgbotapi.InlineKeyboardMarkup, e
 		status = "🔒 Заблокирован"
 	}
 
+	// Показываем real_name как основное имя
+	displayName := user.RealName
+	if displayName == "" {
+		displayName = "Не указано"
+	}
+
 	text := fmt.Sprintf(
 		"👤 *Информация о пользователе*\n\n"+
+			"*Имя:* `%s`\n"+
 			"*User Agent:* `%s`\n"+
 			"*HWID:* `%s`\n"+
 			"*Модель устройства:* `%s`\n"+
 			"*Статус:* %s",
-		user.UserAgent, user.HWID, user.DeviceModel, status,
+		displayName, user.UserAgent, user.HWID, user.DeviceModel, status,
 	)
 
 	// Формируем кнопки
