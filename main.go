@@ -36,6 +36,21 @@ func buildAnswer(limit int) (string, error) {
 		line := fmt.Sprintf("%s | %s | %s", userAgent, hwid, model)
 		lines = append(lines, line)
 	}
+
+	row, err = db.Query("SELECT COUNT(*) FROM shadow_user")
+	if err != nil {
+		return "", err
+	}
+	defer row.Close()
+	var count int
+	for row.Next() {
+		if err = row.Scan(&count); err != nil {
+			return "", err
+		}
+	}
+
+	lines = append(lines, fmt.Sprintf("Всего юзеров %d", count))
+
 	return strings.Join(lines, "\n\n\n"), nil
 }
 
